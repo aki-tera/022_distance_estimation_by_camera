@@ -10,6 +10,7 @@ while True:
     import logger
     break
 
+
 def estimation(setting):
     log = logger.Logger("estimation", level=INFO)
 
