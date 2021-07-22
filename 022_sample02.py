@@ -1,14 +1,13 @@
 import cv2
 import numpy as np
 import json
-from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
-
 
 # PEP8に準拠するとimportが先頭に行くので苦肉の策
 while True:
     import sys
     sys.path.append("../000_mymodule/")
     import logger
+    from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
     break
 
 # パラメータの取り出し
@@ -57,7 +56,6 @@ while True:
     x_start, y_start = 0, 0
     x_end, y_end = 0, 0
 
-
     if ids is None:
         img_trans = cv2.resize(frame, (600, 600))
         log.debug("None")
@@ -95,7 +93,7 @@ while True:
                 x, y = (x_end - x_start), (y_end - y_start)
                 log.info(x)
                 log.info(y)
-                dis = ((x * x + y * y) ** 0.5 ) * 135 / 600
+                dis = ((x * x + y * y) ** 0.5) * 135 / 600
                 log.info(y)
 
                 cv2.line(img_trans, (x_start, y_start), (x_end, y_end), (0, 0, 255), 1)
