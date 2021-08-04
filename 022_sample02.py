@@ -46,6 +46,8 @@ while True:
     aruco.drawDetectedMarkers(img2, corners, ids, (0, 255, 0))
     img2 = cv2.resize(img2, (int(400), int(400 * Height / Width)))
     cv2.imshow("marker", img2)
+
+    log.debug(f"x:400 y:{int(400* Height / Width)}")
        
     m = np.empty((4, 2))
 
