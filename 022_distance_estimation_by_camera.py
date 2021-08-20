@@ -82,7 +82,7 @@ class Model:
 
         if ids is None:
             self.log.debug("None")
-            img_trans = cv2.resize(frame, (600, 600))
+            self.img_trans = cv2.resize(frame, (600, 600))
             self.distance_x = 0.0
             self.distance_y = 0.0
             self.distance_xy = 0.0
@@ -124,7 +124,7 @@ class Model:
                     self.distance_xy = ((self.distance_x * self.distance_x + self.distance_y * self.distance_y) ** 0.5) * 135 / 600
                     self.log.info(self.distance_xy)
 
-                    cv2.line(self.img_trans, (x_start, y_start), (x_end, y_end), (0, 0, 255), 1)
+                    self.img_trans = cv2.line(self.img_trans, (x_start, y_start), (x_end, y_end), (0, 0, 255), 1)
 
         else:
             self.log.debug("others")
@@ -231,16 +231,16 @@ class View:
 
 
     def display_image_original(self):
-        self.img1 = Image.open("test001.png")
+        self.img1 = cv2.cvtColor(self.model.img2, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
         # エラー内容：image "pyimage##" doesn't exist
-        self.im1 = ImageTk.PhotoImage(image=self.img1, master=self.frame1)
+        self.im1 = ImageTk.PhotoImage(image=Image.fromarray(self.img1), master=self.frame1)
         self.canvas1.create_image(0, 0, anchor='nw', image=self.im1)
 
-        self.img4 = Image.open("test002.png")
+        self.img4 = cv2.cvtColor(self.model.img_trans, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
         # エラー内容：image "pyimage##" doesn't exist
-        self.im4 = ImageTk.PhotoImage(image=self.img4, master=self.frame4)
+        self.im4 = ImageTk.PhotoImage(image=Image.fromarray(self.img4), master=self.frame4)
         self.canvas4.create_image(0, 0, anchor='nw', image=self.im4)
 
 
@@ -281,10 +281,12 @@ class Controller():
 
         # 画像取得
         # Viewクラス
-        self.view.display_distance_value()
+        self.view.display_image_original()
+        
 
         # 数値出力
         # Viewクラス
+        self.view.display_distance_value()
 
         # 繰り返し動作
         self.master.after(100, self.request_camera_results)
