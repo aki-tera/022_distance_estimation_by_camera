@@ -59,6 +59,7 @@ class Model:
         # (縦、横、色)
 
         Height, Width = frame.shape[:2]
+        self.log.debug(f"x:{Width} y:{Height}")
 
         # img0 = cv2.resize(frame, (int(200), int(200 * Height / Width)))
         img1 = cv2.resize(frame, (int(Width), int(Height)))
@@ -173,7 +174,7 @@ class View:
 
         self.log.debug("各フレームの内部詳細")
         # フレーム1：オリジナル画像
-        self.canvas1 = tk.Canvas(self.frame1, width=400, height=225)
+        self.canvas1 = tk.Canvas(self.frame1, width=400, height=300)
         # フレーム２：距離関連
         self.label211 = tk.Label(self.frame2, text=" X方向 ", font=self.font_label)
         self.label212 = tk.Label(self.frame2, text=f" {self.model.distance_x:5.1f} ", font=self.font_label)
@@ -327,6 +328,7 @@ class Application(tk.Frame):
         self.log.debug("ウインドウ作成")
         master.geometry("1060x660")
         master.title("カメラによる計測アプリ")
+        master.resizable(width=False, height=False)
 
         self.log.debug("Viewのインスタンス化")
         self.view = View(master, self.model)

@@ -164,14 +164,13 @@ class View:
 
         
         # フレーム1：オリジナル画像
-        self.canvas1 = tk.Canvas(self.frame1, width=400, height=225)
+        self.canvas1 = tk.Canvas(self.frame1, width=400, height=300)
         # フレーム２：距離関連
         self.label211 = tk.Label(self.frame2, text=" X方向 ", font=self.font_label)
         self.label212 = tk.Label(self.frame2, text=f" {self.model.distance_x:5.1f} ", font=self.font_label)
         self.label213 = tk.Label(self.frame2, text="mm", font=self.font_label)
         self.label221 = tk.Label(self.frame2, text=" Y方向 ", font=self.font_label)
         self.label222 = tk.Label(self.frame2, text=f" {self.model.distance_y:5.1f} ", font=self.font_label)
-        # self.label222 = tk.Label(self.frame2, text="          ", font=self.font_label)
         self.label223 = tk.Label(self.frame2, text="mm", font=self.font_label)
         self.label231 = tk.Label(self.frame2, text="  距離", font=self.font_label)
         self.label232 = tk.Label(self.frame2, text=f" {self.model.distance_xy:5.1f} ", font=self.font_label)
@@ -322,7 +321,7 @@ class Application(tk.Frame):
 
         
         master.geometry("1060x660")
-        master.title("カメラによる計測アプリ")
+        master.title("カメラによる計測アプリ(Ver2.2)")
 
         
         self.view = View(master, self.model)
