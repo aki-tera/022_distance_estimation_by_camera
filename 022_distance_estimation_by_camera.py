@@ -14,7 +14,7 @@ while True:
     sys.path.append("../000_mymodule/")
     import logger
     from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
-    DEBUG_LEVEL = DEBUG
+    DEBUG_LEVEL = INFO
     break
 
 
@@ -57,34 +57,35 @@ class Model:
 
         # sizeを取得
         # (縦、横、色)
-
         Height, Width = frame.shape[:2]
-        self.log.debug(f"x:{Width} y:{Height}")
+        self.log.info(f"x:{Width} y:{Height}")
 
-        # img0 = cv2.resize(frame, (int(200), int(200 * Height / Width)))
+        # 処理できる形に変換
         img1 = cv2.resize(frame, (int(Width), int(Height)))
 
-        # 検出
+        # マーカーの検出
         corners, ids, rejectedImgPoints = self.aruco.detectMarkers(img1, self.dictionary)
 
         # 検出したマーカに描画する
         # イメージをコピーする
         self.img2 = np.copy(img1)
         self.aruco.drawDetectedMarkers(self.img2, corners, ids, (0, 255, 0))
+
+        # マーカー付きの画像を小さくする
         self.img2 = cv2.resize(self.img2, (int(400), int(400 * Height / Width)))
 
         self.log.debug(f"x:400 y:{int(400* Height / Width)}")
 
         m = np.empty((4, 2))
 
-        self.log.debug(ids)
-        self.log.debug(type(ids))
+        self.log.info(ids)
 
         # ラインを引く準備
         x_start, y_start = 0, 0
         x_end, y_end = 0, 0
 
         if ids is None:
+            # マーカーが無い場合
             self.log.debug("None")
             self.img_trans = cv2.resize(frame, (600, 600))
             self.distance_x = 0.0
@@ -92,6 +93,7 @@ class Model:
             self.distance_xy = 0.0
             
         elif np.count_nonzero((2 <= ids) & (ids <= 6)) == 4:
+            # マーカーの数が適正な場合：4個（但し、id0とid1は除く）
             self.log.debug("Number is 4")
             for i, c in zip(ids, corners):
                 # マーカーの赤丸位置を基準としている
@@ -102,9 +104,14 @@ class Model:
             # 変形後の画像サイズ
             trans_width, trans_height = (600, 600)
 
+            # 変換前の座標
+            # 射影変換する際、ndarrayはfloat32にする必要あり
             marker_coordinates = np.float32(m)
+            # 変換後の座標ポイント
             true_coordinates = np.float32([[0, 0], [trans_width, 0], [trans_width, trans_height], [0, trans_height]])
+            # 射影変換の実施して変換行列を生成
             trans_mat = cv2.getPerspectiveTransform(marker_coordinates, true_coordinates)
+            # 変換行列を使って画像を変換する
             self.img_trans = cv2.warpPerspective(img1, trans_mat, (trans_width, trans_height))
 
             if np.count_nonzero((0 <= ids) & (ids <= 1)) == 2:
@@ -117,25 +124,28 @@ class Model:
                             x_start, y_start = int(corner[0][0][0]), int(corner[0][0][1])
                         elif number == 1:
                             x_end, y_end = int(corner[0][0][0]), int(corner[0][0][1])
-                    self.log.debug(x_start)
-                    self.log.debug(y_start)
-                    self.log.debug(x_end)
-                    self.log.debug(y_end)
                     # id(0と1)の距離を表示
-                    self.distance_x, self.distance_y = (x_end - x_start)* 135.0 / 600.0, (y_end - y_start)* 135.0 / 600.0
-                    self.log.info(self.distance_x )
-                    self.log.info(self.distance_y )
+                    self.distance_x, self.distance_y = (x_end - x_start) * 135.0 / 600.0, (y_end - y_start) * 135.0 / 600.0
                     self.distance_xy = ((self.distance_x * self.distance_x + self.distance_y * self.distance_y) ** 0.5)
-                    self.log.info(self.distance_xy)
-
+                    # id0とid1の間にラインを引く
                     self.img_trans = cv2.line(self.img_trans, (x_start, y_start), (x_end, y_end), (0, 0, 255), 1)
 
         else:
+            # マーカーが0～3個場合（但し、id0とid1は除く）
             self.log.debug("others")
             self.img_trans = cv2.resize(frame, (600, 600))
             self.distance_x = 0.0
             self.distance_y = 0.0
             self.distance_xy = 0.0
+
+        # 計算結果の確認用
+        self.log.debug(x_start)
+        self.log.debug(y_start)
+        self.log.debug(x_end)
+        self.log.debug(y_end)
+        self.log.info(self.distance_x)
+        self.log.info(self.distance_y)
+        self.log.info(self.distance_xy)
             
 
 class View:
@@ -144,6 +154,7 @@ class View:
     def __init__(self, master, model):
         self.log.debug("__init__")
 
+        # インスタンス化
         self.master = master
         self.model = model
 
@@ -185,7 +196,7 @@ class View:
         self.label231 = tk.Label(self.frame2, text="  距離", font=self.font_label)
         self.label232 = tk.Label(self.frame2, text=f" {self.model.distance_xy:5.1f} ", font=self.font_label)
         self.label233 = tk.Label(self.frame2, text="mm", font=self.font_label)
-        # フレーム３：終了ボタン
+        # フレーム３：ボタン
         self.button31 = tk.Button(self.frame3, text="開始", font=self.font_buttom)
         self.button32 = tk.Button(self.frame3, text="終了", font=self.font_buttom)
         # フレーム４：変換画像
@@ -217,6 +228,7 @@ class View:
 
     def display_distance_value(self):
         self.log.debug("display_distance_value")
+        # 更新された距離を表示する
 
         # X方向
         self.label212 = tk.Label(self.frame2, text=f" {self.model.distance_x:5.1f} ", font=self.font_label)
@@ -233,6 +245,7 @@ class View:
     def display_image_original(self):
         self.log.debug("display_image_original")
 
+        # マーク付きのオリジナル画像を表示する
         self.img1 = cv2.cvtColor(self.model.img2, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
         # エラー内容：image "pyimage##" doesn't exist
@@ -242,6 +255,7 @@ class View:
     def display_image_translation(self):
         self.log.debug("display_image_translation")
 
+        # マーク内の変換画像を表示する
         self.img4 = cv2.cvtColor(self.model.img_trans, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
         # エラー内容：image "pyimage##" doesn't exist
@@ -260,9 +274,9 @@ class Controller():
         self.model = model
         self.view = view
 
-        # カメラの起動有無
+        # カメラの起動有無のフラグ設定
         self.is_camera_open = False
-        # 起動するカメラの設定
+        # 本ソフトの設定ファイル読み込み
         self.camera_setting = json.load(open("setting.json", "r", encoding="utf-8"))
         self.log.debug(str(self.camera_setting))
 
@@ -270,11 +284,14 @@ class Controller():
         self.log.debug("request_camera_open")
         self.log.debug(f"camera_open:{str(self.is_camera_open)}")
 
+        # カメラの起動
         self.model.camera_open(self.camera_setting)
+        # カメラ起動のON
         self.is_camera_open = True
 
     def request_camera_results(self):
         self.log.debug("request_camera_view")
+        # 各種の表示をここで一括して行う
 
         # カメラ処理（画像取得、距離取得）の実施
         # Moldeクラス
@@ -304,6 +321,9 @@ class Controller():
 
     def press_close_button(self):
         self.log.debug("press_close_button")
+        # 終了処理
+
+        # ウイジェットの終了
         self.master.destroy()
         # カメラリソース解放
         if self.is_camera_open is True:
@@ -319,28 +339,29 @@ class Application(tk.Frame):
         # tkinterの定型文
 
         self.log.debug("__init__")
+        # tkinterの定型文
         super().__init__(master)
         self.grid()
 
         self.log.debug("Modelのインスタンス化")
+        # インスタンス化
         self.model = Model()
 
         self.log.debug("ウインドウ作成")
         master.geometry("1060x660")
         master.title("カメラによる計測アプリ")
+        # ウインドウサイズの変更不可
         master.resizable(width=False, height=False)
 
+        # インスタンス化
         self.log.debug("Viewのインスタンス化")
         self.view = View(master, self.model)
-
         self.log.debug("Controllerのインスタンス化")
         self.controller = Controller(master, self.model, self.view)
 
         self.log.debug("ボタンの登録")
         self.view.button31["command"] = self.controller.press_start_button
         self.view.button32["command"] = self.controller.press_close_button
-        
-
 
 def main():
     win = tk.Tk()
@@ -350,23 +371,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# 参考資料
-
-# 【Python】Tkinterを使った雛形（MVCモデル）
-# https://qiita.com/michimichix521/items/8687962247cae41625f7
-
-# python: サンプルプログラムでMVCモデルの構成を掴む
-# https://moimoiblog.com/programing/python-mvcmodel-study/
-
-# Tkinter GUIアプリケーションの部品 (widgets) をウィンドウ上にどうやって配置するのだろう - 3つのジオメトリマネージャー
-# https://cassiopeia.hatenadiary.org/entry/20070905/1189023758
-
-# 【Python】Tkinterのcanvasを使ってみる
-# https://qiita.com/nnahito/items/2ab3ad0f3adacc3314e6
-
-# PythonでGUIに画像を表示する
-# https://water2litter.net/rum/post/python_tkinter_canvas_create_image/
-
-# 【Python tkinter】LabelFrame（ラベルフレーム）ウィジェットの使い方
-# https://office54.net/python/tkinter/python-tkinter-labelframe

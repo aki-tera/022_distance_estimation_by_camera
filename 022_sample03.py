@@ -9,7 +9,6 @@ import json
 
 
 
-
 class Model:
     
 
@@ -28,7 +27,9 @@ class Model:
         self.aruco = cv2.aruco
         self.dictionary = self.aruco.getPredefinedDictionary(self.aruco.DICT_4X4_50)
 
-        self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"])
+        # CAP_DSHOWを設定すると、終了時のterminating async callbackのエラーは出なくなる
+        # ただし場合によっては、フレームレートが劇遅になる可能性あり
+        self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"], cv2.CAP_DSHOW)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.camera_setting["CAM"]["WIDTH"])
     
     def caremra_release(self):
@@ -49,8 +50,9 @@ class Model:
         # (縦、横、色)
 
         Height, Width = frame.shape[:2]
+        
 
-        img0 = cv2.resize(frame, (int(200), int(200 * Height / Width)))
+        # img0 = cv2.resize(frame, (int(200), int(200 * Height / Width)))
         img1 = cv2.resize(frame, (int(Width), int(Height)))
 
         # 検出
@@ -127,7 +129,6 @@ class Model:
             self.distance_xy = 0.0
             
 
-
 class View:
     
 
@@ -182,7 +183,7 @@ class View:
         self.canvas4 = tk.Canvas(self.frame4, width=600, height=600)
 
         
-        self.canvas1.grid()
+        self.canvas1.grid(pady=20)
         # c=左1, r=上
         self.label211.grid(column=0, row=0)
         # c=左2, r=上
@@ -220,14 +221,17 @@ class View:
         self.label222.grid(column=1, row=1)
         self.label232.grid(column=4, row=0, rowspan=2)
 
-
-
     def display_image_original(self):
+        
+
         self.img1 = cv2.cvtColor(self.model.img2, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
         # エラー内容：image "pyimage##" doesn't exist
         self.im1 = ImageTk.PhotoImage(image=Image.fromarray(self.img1), master=self.frame1)
         self.canvas1.create_image(0, 0, anchor='nw', image=self.im1)
+
+    def display_image_translation(self):
+        
 
         self.img4 = cv2.cvtColor(self.model.img_trans, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
@@ -248,21 +252,17 @@ class Controller():
         self.view = view
 
         # カメラの起動有無
-        self.camera_open = False
+        self.is_camera_open = False
         # 起動するカメラの設定
         self.camera_setting = json.load(open("setting.json", "r", encoding="utf-8"))
         
 
-
     def request_camera_open(self):
         
-        # 1回目のみカメラ起動
-        # Model
         
-        if self.camera_open is False:
-            
-            self.model.camera_open(self.camera_setting)
-            self.camera_open = True
+
+        self.model.camera_open(self.camera_setting)
+        self.is_camera_open = True
 
     def request_camera_results(self):
         
@@ -271,39 +271,36 @@ class Controller():
         # Moldeクラス
         self.model.create_camera_infomations()
 
-        # 画像取得
-        # Viewクラス
-        self.view.display_image_original()
-        
-
         # 数値出力
         # Viewクラス
         self.view.display_distance_value()
 
-        # 繰り返し動作
-        self.master.after(100, self.request_camera_results)
+        # 画像取得
+        # Viewクラス
+        self.view.display_image_original()
+        self.view.display_image_translation()
 
+        # 繰り返し動作
+        self.master.after(self.model.camera_setting["DISPLAY_RATE"]["RATE"], self.request_camera_results)
 
     def press_start_button(self):
         
 
-        # カメラの起動
-        self.request_camera_open()
-
-        # カメラの結果を取得
-        self.request_camera_results()
-
-
+        # 初回のみカメラを起動
+        # 初回のみ結果取得を実行して、あとはafterメソッドで対応する
+        if self.is_camera_open is False:
+            self.request_camera_open()
+            # カメラの結果を取得
+            self.request_camera_results()
 
     def press_close_button(self):
         
         self.master.destroy()
         # カメラリソース解放
-        self.model.caremra_release()
+        if self.is_camera_open is True:
+            self.model.caremra_release()
         
         
-
-
 
 
 class Application(tk.Frame):
@@ -321,7 +318,8 @@ class Application(tk.Frame):
 
         
         master.geometry("1060x660")
-        master.title("カメラによる計測アプリ(Ver2.2)")
+        master.title("カメラによる計測アプリVer2.3")
+        master.resizable(width=False, height=False)
 
         
         self.view = View(master, self.model)
