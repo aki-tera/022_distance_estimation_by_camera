@@ -23,15 +23,18 @@ class Model:
 
     def __init__(self):
         self.log.debug("__init__")
+
+        # 本ソフトの設定ファイル読み込み
+        self.camera_setting = json.load(open("setting.json", "r", encoding="utf-8"))
+        self.log.debug(str(self.camera_setting))
+
         self.distance_x = 999.0
         self.distance_y = 999.0
         self.distance_xy = 999.0
 
-    def camera_open(self, camera_setting):
+    def camera_open(self):
         # カメラ起動
         self.log.debug("camera_open")
-
-        self.camera_setting = camera_setting
 
         self.aruco = cv2.aruco
         self.dictionary = self.aruco.getPredefinedDictionary(self.aruco.DICT_4X4_50)
@@ -40,7 +43,7 @@ class Model:
         # ただし場合によっては、フレームレートが劇遅になる可能性あり
         self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"], cv2.CAP_DSHOW)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.camera_setting["CAM"]["WIDTH"])
-    
+
     def caremra_release(self):
         # カメラリソース解放
         self.log.debug("camera_release")
@@ -91,7 +94,7 @@ class Model:
             self.distance_x = 0.0
             self.distance_y = 0.0
             self.distance_xy = 0.0
-            
+
         elif np.count_nonzero((2 <= ids) & (ids <= 6)) == 4:
             # マーカーの数が適正な場合：4個（但し、id0とid1は除く）
             self.log.debug("Number is 4")
@@ -146,7 +149,7 @@ class Model:
         self.log.info(self.distance_x)
         self.log.info(self.distance_y)
         self.log.info(self.distance_xy)
-            
+
 
 class View:
     log = logger.Logger("View", level=DEBUG_LEVEL)
@@ -276,16 +279,13 @@ class Controller():
 
         # カメラの起動有無のフラグ設定
         self.is_camera_open = False
-        # 本ソフトの設定ファイル読み込み
-        self.camera_setting = json.load(open("setting.json", "r", encoding="utf-8"))
-        self.log.debug(str(self.camera_setting))
 
     def request_camera_open(self):
         self.log.debug("request_camera_open")
         self.log.debug(f"camera_open:{str(self.is_camera_open)}")
 
         # カメラの起動
-        self.model.camera_open(self.camera_setting)
+        self.model.camera_open()
         # カメラ起動のON
         self.is_camera_open = True
 
@@ -328,7 +328,7 @@ class Controller():
         # カメラリソース解放
         if self.is_camera_open is True:
             self.model.caremra_release()
-        
+
         self.log.debug("終了")
 
 
