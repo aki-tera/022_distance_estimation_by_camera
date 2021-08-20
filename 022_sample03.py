@@ -8,27 +8,20 @@ import numpy as np
 import json
 
 
-# PEP8に準拠するとimportが先頭に行くので苦肉の策
-while True:
-    import sys
-    sys.path.append("../000_mymodule/")
-    import logger
-    from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
-    break
 
 
 class Model:
-    log = logger.Logger("Model", level=DEBUG)
+    
 
     def __init__(self):
-        self.log.debug("__init__")
+        
         self.distance_x = 999.0
         self.distance_y = 999.0
         self.distance_xy = 999.0
 
     def camera_open(self, camera_setting):
         # カメラ起動
-        self.log.debug("camera_open")
+        
 
         self.camera_setting = camera_setting
 
@@ -40,17 +33,17 @@ class Model:
     
     def caremra_release(self):
         # カメラリソース解放
-        self.log.debug("camera_release")
+        
         self.cap.release()
 
     def create_camera_infomations(self):
         # cv2の処理をすべて実施
-        self.log.debug("create_camera_infomations")
+        
 
         # ビデオキャプチャから画像を取得
         ret, frame = self.cap.read()
 
-        self.log.debug(ret)
+        
 
         # sizeを取得
         # (縦、横、色)
@@ -69,26 +62,30 @@ class Model:
         self.aruco.drawDetectedMarkers(self.img2, corners, ids, (0, 255, 0))
         self.img2 = cv2.resize(self.img2, (int(400), int(400 * Height / Width)))
 
-        self.log.debug(f"x:400 y:{int(400* Height / Width)}")
+        
 
         m = np.empty((4, 2))
 
-        self.log.debug(ids)
-        self.log.debug(type(ids))
+        
+        
 
         # ラインを引く準備
         x_start, y_start = 0, 0
         x_end, y_end = 0, 0
 
         if ids is None:
-            img_trans = cv2.resize(frame, (600, 600))
-            self.log.debug("None")
+            
+            self.img_trans = cv2.resize(frame, (600, 600))
+            self.distance_x = 0.0
+            self.distance_y = 0.0
+            self.distance_xy = 0.0
+            
         elif np.count_nonzero((2 <= ids) & (ids <= 6)) == 4:
-            self.log.debug("Number is 4")
+            
             for i, c in zip(ids, corners):
                 # マーカーの赤丸位置を基準としている
                 if 2 <= i <= 6:
-                    self.log.debug(c)
+                    
                     m[i - 2] = c[0][0]
 
             # 変形後の画像サイズ
@@ -109,21 +106,21 @@ class Model:
                             x_start, y_start = int(corner[0][0][0]), int(corner[0][0][1])
                         elif number == 1:
                             x_end, y_end = int(corner[0][0][0]), int(corner[0][0][1])
-                    self.log.debug(x_start)
-                    self.log.debug(y_start)
-                    self.log.debug(x_end)
-                    self.log.debug(y_end)
+                    
+                    
+                    
+                    
                     # id(0と1)の距離を表示
-                    self.distance_x, self.distance_y = (x_end - x_start), (y_end - y_start)
-                    self.log.info(self.distance_x)
-                    self.log.info(self.distance_y)
-                    self.distance_xy = ((self.distance_x * self.distance_x + self.distance_y * self.distance_y) ** 0.5) * 135 / 600
-                    self.log.info(self.distance_xy)
+                    self.distance_x, self.distance_y = (x_end - x_start)* 135.0 / 600.0, (y_end - y_start)* 135.0 / 600.0
+                    
+                    
+                    self.distance_xy = ((self.distance_x * self.distance_x + self.distance_y * self.distance_y) ** 0.5)
+                    
 
-                    cv2.line(self.img_trans, (x_start, y_start), (x_end, y_end), (0, 0, 255), 1)
+                    self.img_trans = cv2.line(self.img_trans, (x_start, y_start), (x_end, y_end), (0, 0, 255), 1)
 
         else:
-            self.log.debug("others")
+            
             self.img_trans = cv2.resize(frame, (600, 600))
             self.distance_x = 0.0
             self.distance_y = 0.0
@@ -132,16 +129,16 @@ class Model:
 
 
 class View:
-    log = logger.Logger("View", level=DEBUG)
+    
 
     def __init__(self, master, model):
-        self.log.debug("__init__")
+        
 
         self.master = master
         self.model = model
 
         # フォントの設定
-        self.log.debug("フォントの設定")
+        
         # ラベルフレーム用
         self.font_frame = font.Font(family="Meiryo UI", size=15, weight="normal")
         # ラベル用
@@ -149,13 +146,13 @@ class View:
         # ボタン用
         self.font_buttom = font.Font(family="Meiryo UI", size=20, weight="bold")
 
-        self.log.debug("フレームの設定")
+        
         self.frame1 = tk.LabelFrame(self.master, text="元画像", font=self.font_frame)
         self.frame2 = tk.LabelFrame(self.master, text="計測距離", font=self.font_frame)
         self.frame3 = tk.Frame(self.master)
         self.frame4 = tk.LabelFrame(self.master, text="変換画像", font=self.font_frame)
 
-        self.log.debug("グリッドの設定")
+        
         # c=左, r=上, s=全方向に伸ばす, p=10の隙間
         self.frame1.grid(column=0, row=0, sticky=tk.E + tk.W + tk.S + tk.N, padx=10, pady=10)
         # c=左, r=中, s=全方向に伸ばす, p=10の隙間
@@ -165,7 +162,7 @@ class View:
         # c=右, r=上, rp=3個連結, p=10の隙間
         self.frame4.grid(column=1, row=0, rowspan=3, padx=10, pady=10)
 
-        self.log.debug("各フレームの内部詳細")
+        
         # フレーム1：オリジナル画像
         self.canvas1 = tk.Canvas(self.frame1, width=400, height=225)
         # フレーム２：距離関連
@@ -185,7 +182,7 @@ class View:
         # フレーム４：変換画像
         self.canvas4 = tk.Canvas(self.frame4, width=600, height=600)
 
-        self.log.debug("各フレームの内部グリッド")
+        
         self.canvas1.grid()
         # c=左1, r=上
         self.label211.grid(column=0, row=0)
@@ -210,7 +207,7 @@ class View:
         self.canvas4.grid()
 
     def display_distance_value(self):
-        self.log.debug("display_distance_value")
+        
 
         # X方向
         self.label212 = tk.Label(self.frame2, text=f" {self.model.distance_x:5.1f} ", font=self.font_label)
@@ -227,24 +224,24 @@ class View:
 
 
     def display_image_original(self):
-        self.img1 = Image.open("test001.png")
+        self.img1 = cv2.cvtColor(self.model.img2, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
         # エラー内容：image "pyimage##" doesn't exist
-        self.im1 = ImageTk.PhotoImage(image=self.img1, master=self.frame1)
+        self.im1 = ImageTk.PhotoImage(image=Image.fromarray(self.img1), master=self.frame1)
         self.canvas1.create_image(0, 0, anchor='nw', image=self.im1)
 
-        self.img4 = Image.open("test002.png")
+        self.img4 = cv2.cvtColor(self.model.img_trans, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
         # エラー内容：image "pyimage##" doesn't exist
-        self.im4 = ImageTk.PhotoImage(image=self.img4, master=self.frame4)
+        self.im4 = ImageTk.PhotoImage(image=Image.fromarray(self.img4), master=self.frame4)
         self.canvas4.create_image(0, 0, anchor='nw', image=self.im4)
 
 
 class Controller():
-    log = logger.Logger("Controller", level=DEBUG)
+    
 
     def __init__(self, master, model, view):
-        self.log.debug("__init__")
+        
 
         # インスタンス化
         self.master = master
@@ -255,21 +252,21 @@ class Controller():
         self.camera_open = False
         # 起動するカメラの設定
         self.camera_setting = json.load(open("setting.json", "r", encoding="utf-8"))
-        self.log.debug(str(self.camera_setting))
+        
 
 
     def request_camera_open(self):
-        self.log.debug("request_camera_open")
+        
         # 1回目のみカメラ起動
         # Model
-        self.log.debug(f"camera_open:{str(self.camera_open)}")
+        
         if self.camera_open is False:
-            self.log.debug("初回のカメラ起動")
+            
             self.model.camera_open(self.camera_setting)
             self.camera_open = True
 
     def request_camera_results(self):
-        self.log.debug("request_camera_view")
+        
 
         # カメラ処理（画像取得、距離取得）の実施
         # Moldeクラス
@@ -277,17 +274,19 @@ class Controller():
 
         # 画像取得
         # Viewクラス
-        self.view.display_distance_value()
+        self.view.display_image_original()
+        
 
         # 数値出力
         # Viewクラス
+        self.view.display_distance_value()
 
         # 繰り返し動作
         self.master.after(100, self.request_camera_results)
 
 
     def press_start_button(self):
-        self.log.debug("press_start_button")
+        
 
         # カメラの起動
         self.request_camera_open()
@@ -298,40 +297,40 @@ class Controller():
 
 
     def press_close_button(self):
-        self.log.debug("press_close_button")
+        
         self.master.destroy()
         # カメラリソース解放
         self.model.caremra_release()
         
-        self.log.debug("終了")
+        
 
 
 
 
 class Application(tk.Frame):
-    log = logger.Logger("Application", level=DEBUG)
+    
 
     def __init__(self, master):
         # tkinterの定型文
 
-        self.log.debug("__init__")
+        
         super().__init__(master)
         self.grid()
 
-        self.log.debug("Modelのインスタンス化")
+        
         self.model = Model()
 
-        self.log.debug("ウインドウ作成")
+        
         master.geometry("1060x660")
         master.title("カメラによる計測アプリ")
 
-        self.log.debug("Viewのインスタンス化")
+        
         self.view = View(master, self.model)
 
-        self.log.debug("Controllerのインスタンス化")
+        
         self.controller = Controller(master, self.model, self.view)
 
-        self.log.debug("ボタンの登録")
+        
         self.view.button31["command"] = self.controller.press_start_button
         self.view.button32["command"] = self.controller.press_close_button
         
@@ -346,22 +345,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-# 参考資料
-
-# 【Python】Tkinterを使った雛形（MVCモデル）
-# https://qiita.com/michimichix521/items/8687962247cae41625f7
-
-# python: サンプルプログラムでMVCモデルの構成を掴む
-# https://moimoiblog.com/programing/python-mvcmodel-study/
-
-# Tkinter GUIアプリケーションの部品 (widgets) をウィンドウ上にどうやって配置するのだろう - 3つのジオメトリマネージャー
-# https://cassiopeia.hatenadiary.org/entry/20070905/1189023758
-
-# 【Python】Tkinterのcanvasを使ってみる
-# https://qiita.com/nnahito/items/2ab3ad0f3adacc3314e6
-
-# PythonでGUIに画像を表示する
-# https://water2litter.net/rum/post/python_tkinter_canvas_create_image/
-
-# 【Python tkinter】LabelFrame（ラベルフレーム）ウィジェットの使い方
-# https://office54.net/python/tkinter/python-tkinter-labelframe

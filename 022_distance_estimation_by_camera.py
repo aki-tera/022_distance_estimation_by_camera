@@ -14,11 +14,12 @@ while True:
     sys.path.append("../000_mymodule/")
     import logger
     from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
+    DEBUG_LEVEL = DEBUG
     break
 
 
 class Model:
-    log = logger.Logger("Model", level=DEBUG)
+    log = logger.Logger("Model", level=DEBUG_LEVEL)
 
     def __init__(self):
         self.log.debug("__init__")
@@ -35,7 +36,9 @@ class Model:
         self.aruco = cv2.aruco
         self.dictionary = self.aruco.getPredefinedDictionary(self.aruco.DICT_4X4_50)
 
-        self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"])
+        # CAP_DSHOWを設定すると、終了時のterminating async callbackのエラーは出なくなる
+        # ただし場合によっては、フレームレートが劇遅になる可能性あり
+        self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"], cv2.CAP_DSHOW)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.camera_setting["CAM"]["WIDTH"])
     
     def caremra_release(self):
@@ -57,7 +60,7 @@ class Model:
 
         Height, Width = frame.shape[:2]
 
-        img0 = cv2.resize(frame, (int(200), int(200 * Height / Width)))
+        # img0 = cv2.resize(frame, (int(200), int(200 * Height / Width)))
         img1 = cv2.resize(frame, (int(Width), int(Height)))
 
         # 検出
@@ -118,10 +121,10 @@ class Model:
                     self.log.debug(x_end)
                     self.log.debug(y_end)
                     # id(0と1)の距離を表示
-                    self.distance_x, self.distance_y = (x_end - x_start), (y_end - y_start)
-                    self.log.info(self.distance_x)
-                    self.log.info(self.distance_y)
-                    self.distance_xy = ((self.distance_x * self.distance_x + self.distance_y * self.distance_y) ** 0.5) * 135 / 600
+                    self.distance_x, self.distance_y = (x_end - x_start)* 135.0 / 600.0, (y_end - y_start)* 135.0 / 600.0
+                    self.log.info(self.distance_x )
+                    self.log.info(self.distance_y )
+                    self.distance_xy = ((self.distance_x * self.distance_x + self.distance_y * self.distance_y) ** 0.5)
                     self.log.info(self.distance_xy)
 
                     self.img_trans = cv2.line(self.img_trans, (x_start, y_start), (x_end, y_end), (0, 0, 255), 1)
@@ -134,9 +137,8 @@ class Model:
             self.distance_xy = 0.0
             
 
-
 class View:
-    log = logger.Logger("View", level=DEBUG)
+    log = logger.Logger("View", level=DEBUG_LEVEL)
 
     def __init__(self, master, model):
         self.log.debug("__init__")
@@ -178,7 +180,6 @@ class View:
         self.label213 = tk.Label(self.frame2, text="mm", font=self.font_label)
         self.label221 = tk.Label(self.frame2, text=" Y方向 ", font=self.font_label)
         self.label222 = tk.Label(self.frame2, text=f" {self.model.distance_y:5.1f} ", font=self.font_label)
-        # self.label222 = tk.Label(self.frame2, text="          ", font=self.font_label)
         self.label223 = tk.Label(self.frame2, text="mm", font=self.font_label)
         self.label231 = tk.Label(self.frame2, text="  距離", font=self.font_label)
         self.label232 = tk.Label(self.frame2, text=f" {self.model.distance_xy:5.1f} ", font=self.font_label)
@@ -190,7 +191,7 @@ class View:
         self.canvas4 = tk.Canvas(self.frame4, width=600, height=600)
 
         self.log.debug("各フレームの内部グリッド")
-        self.canvas1.grid()
+        self.canvas1.grid(pady=20)
         # c=左1, r=上
         self.label211.grid(column=0, row=0)
         # c=左2, r=上
@@ -228,14 +229,17 @@ class View:
         self.label222.grid(column=1, row=1)
         self.label232.grid(column=4, row=0, rowspan=2)
 
-
-
     def display_image_original(self):
+        self.log.debug("display_image_original")
+
         self.img1 = cv2.cvtColor(self.model.img2, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
         # エラー内容：image "pyimage##" doesn't exist
         self.im1 = ImageTk.PhotoImage(image=Image.fromarray(self.img1), master=self.frame1)
         self.canvas1.create_image(0, 0, anchor='nw', image=self.im1)
+
+    def display_image_translation(self):
+        self.log.debug("display_image_translation")
 
         self.img4 = cv2.cvtColor(self.model.img_trans, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
@@ -245,7 +249,7 @@ class View:
 
 
 class Controller():
-    log = logger.Logger("Controller", level=DEBUG)
+    log = logger.Logger("Controller", level=DEBUG_LEVEL)
 
     def __init__(self, master, model, view):
         self.log.debug("__init__")
@@ -256,21 +260,17 @@ class Controller():
         self.view = view
 
         # カメラの起動有無
-        self.camera_open = False
+        self.is_camera_open = False
         # 起動するカメラの設定
         self.camera_setting = json.load(open("setting.json", "r", encoding="utf-8"))
         self.log.debug(str(self.camera_setting))
 
-
     def request_camera_open(self):
         self.log.debug("request_camera_open")
-        # 1回目のみカメラ起動
-        # Model
-        self.log.debug(f"camera_open:{str(self.camera_open)}")
-        if self.camera_open is False:
-            self.log.debug("初回のカメラ起動")
-            self.model.camera_open(self.camera_setting)
-            self.camera_open = True
+        self.log.debug(f"camera_open:{str(self.is_camera_open)}")
+
+        self.model.camera_open(self.camera_setting)
+        self.is_camera_open = True
 
     def request_camera_results(self):
         self.log.debug("request_camera_view")
@@ -279,43 +279,40 @@ class Controller():
         # Moldeクラス
         self.model.create_camera_infomations()
 
-        # 画像取得
-        # Viewクラス
-        self.view.display_image_original()
-        
-
         # 数値出力
         # Viewクラス
         self.view.display_distance_value()
 
-        # 繰り返し動作
-        self.master.after(100, self.request_camera_results)
+        # 画像取得
+        # Viewクラス
+        self.view.display_image_original()
+        self.view.display_image_translation()
 
+        # 繰り返し動作
+        self.master.after(self.model.camera_setting["DISPLAY_RATE"]["RATE"], self.request_camera_results)
 
     def press_start_button(self):
         self.log.debug("press_start_button")
 
-        # カメラの起動
-        self.request_camera_open()
-
-        # カメラの結果を取得
-        self.request_camera_results()
-
-
+        # 初回のみカメラを起動
+        # 初回のみ結果取得を実行して、あとはafterメソッドで対応する
+        if self.is_camera_open is False:
+            self.request_camera_open()
+            # カメラの結果を取得
+            self.request_camera_results()
 
     def press_close_button(self):
         self.log.debug("press_close_button")
         self.master.destroy()
         # カメラリソース解放
-        self.model.caremra_release()
+        if self.is_camera_open is True:
+            self.model.caremra_release()
         
         self.log.debug("終了")
 
 
-
-
 class Application(tk.Frame):
-    log = logger.Logger("Application", level=DEBUG)
+    log = logger.Logger("Application", level=DEBUG_LEVEL)
 
     def __init__(self, master):
         # tkinterの定型文
