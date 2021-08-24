@@ -14,7 +14,7 @@ while True:
     sys.path.append("../000_mymodule/")
     import logger
     from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
-    DEBUG_LEVEL = INFO
+    DEBUG_LEVEL = CRITICAL
     break
 
 
@@ -28,8 +28,11 @@ class Model:
         self.camera_setting = json.load(open("setting.json", "r", encoding="utf-8"))
         self.log.debug(str(self.camera_setting))
 
-        self.camera_width = 999
-        self.camera_height = 999
+        self.camera_id = self.camera_setting["CAM"]["ID"]
+        self.camera_fps = self.camera_setting["DISPLAY_RATE"]["RATE"]
+
+        self.camera_width = 0
+        self.camera_height = 0
 
         self.distance_x = 999.0
         self.distance_y = 999.0
@@ -48,6 +51,13 @@ class Model:
         # カメラ画素より小さい画像を選択するときに有効
         # 持っているカメラが640*480なので不要とする
         # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.camera_setting["CAM"]["WIDTH"])
+
+        # カメラのステータス確認
+        _, frame = self.cap.read()
+
+        # sizeを取得
+        # (縦、横、色)
+        self.camera_height, self.camera_width = frame.shape[:2]
 
     def caremra_release(self):
         # カメラリソース解放
@@ -172,13 +182,29 @@ class View:
         # フォントの設定
         self.log.debug("フォントの設定")
         # メニュー用
-        self.font_menu = font.Font(family="Meiryo UI", size=30, weight="bold")
+        self.font_menu = font.Font(family="Meiryo UI", size=20, weight="bold")
         # ラベルフレーム用
         self.font_frame = font.Font(family="Meiryo UI", size=15, weight="normal")
         # ラベル用
         self.font_label = font.Font(family="Meiryo UI", size=15, weight="bold")
         # ボタン用
         self.font_buttom = font.Font(family="Meiryo UI", size=20, weight="bold")
+
+        # メニューの表示
+        self.menu_bar = tk.Menu()
+
+        # メニューの展開先の設定
+        self.menu_file = tk.Menu(self.menu_bar, tearoff=False)
+        self.menu_file.add_command(label=f"使用しているカメラのID:{self.model.camera_id}", font=self.font_menu)
+        self.menu_file.add_command(label=f"FPS:{self.model.camera_fps}", font=self.font_menu)
+        self.menu_file.add_command(label=f"カメラの横幅:{self.model.camera_width}", font=self.font_menu)
+        self.menu_file.add_command(label=f"カメラの縦幅:{self.model.camera_height}", font=self.font_menu)
+        
+        # メニューのルート設定
+        self.menu_bar.add_cascade(label="カメラ情報", menu=self.menu_file)
+
+        # メニューの表示
+        self.master.config(menu=self.menu_bar)
 
         self.log.debug("フレームの設定")
         # フレーム設定
@@ -240,6 +266,19 @@ class View:
         self.button32.grid(column=1, row=0, padx=20)
         self.canvas4.grid()
 
+    def update_menu_infomation(self):
+        self.log.debug("update_menu_infomation")
+        # メニューの更新
+
+        # 現状のメニューを一旦削除
+        self.menu_file.delete(0, 3)
+
+        # メニューを再表示
+        self.menu_file.add_command(label=f"カメラID:{self.model.camera_id}", font=self.font_menu)
+        self.menu_file.add_command(label=f"FPS:{self.model.camera_fps}", font=self.font_menu)
+        self.menu_file.add_command(label=f"画面の横幅:{self.model.camera_width}", font=self.font_menu)
+        self.menu_file.add_command(label=f"画面の縦幅:{self.model.camera_height}", font=self.font_menu)
+
     def display_distance_value(self):
         self.log.debug("display_distance_value")
         # 更新された距離を表示する
@@ -300,6 +339,9 @@ class Controller():
         # カメラ起動のON
         self.is_camera_open = True
 
+        # メニューの更新
+        self.view.update_menu_infomation()
+
     def request_camera_results(self):
         self.log.debug("request_camera_view")
         # 各種の表示をここで一括して行う
@@ -318,7 +360,7 @@ class Controller():
         self.view.display_image_translation()
 
         # 繰り返し動作
-        self.master.after(self.model.camera_setting["DISPLAY_RATE"]["RATE"], self.request_camera_results)
+        self.master.after(int(1000 / self.model.camera_fps), self.request_camera_results)
 
     def press_start_button(self):
         self.log.debug("press_start_button")
@@ -373,6 +415,7 @@ class Application(tk.Frame):
         self.log.debug("ボタンの登録")
         self.view.button31["command"] = self.controller.press_start_button
         self.view.button32["command"] = self.controller.press_close_button
+
 
 def main():
     win = tk.Tk()
