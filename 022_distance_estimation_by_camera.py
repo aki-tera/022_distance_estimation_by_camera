@@ -276,8 +276,8 @@ class View:
         # メニューを再表示
         self.menu_file.add_command(label=f"カメラID:{self.model.camera_id}", font=self.font_menu)
         self.menu_file.add_command(label=f"FPS:{self.model.camera_fps}", font=self.font_menu)
-        self.menu_file.add_command(label=f"画面の横幅:{self.model.camera_width}", font=self.font_menu)
-        self.menu_file.add_command(label=f"画面の縦幅:{self.model.camera_height}", font=self.font_menu)
+        self.menu_file.add_command(label=f"カメラの横幅:{self.model.camera_width}", font=self.font_menu)
+        self.menu_file.add_command(label=f"カメラの縦幅:{self.model.camera_height}", font=self.font_menu)
 
     def display_distance_value(self):
         self.log.debug("display_distance_value")
