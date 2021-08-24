@@ -28,6 +28,9 @@ class Model:
         self.camera_setting = json.load(open("setting.json", "r", encoding="utf-8"))
         self.log.debug(str(self.camera_setting))
 
+        self.camera_width = 999
+        self.camera_height = 999
+
         self.distance_x = 999.0
         self.distance_y = 999.0
         self.distance_xy = 999.0
@@ -42,7 +45,9 @@ class Model:
         # CAP_DSHOWを設定すると、終了時のterminating async callbackのエラーは出なくなる
         # ただし場合によっては、フレームレートが劇遅になる可能性あり
         self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"], cv2.CAP_DSHOW)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.camera_setting["CAM"]["WIDTH"])
+        # カメラ画素より小さい画像を選択するときに有効
+        # 持っているカメラが640*480なので不要とする
+        # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.camera_setting["CAM"]["WIDTH"])
 
     def caremra_release(self):
         # カメラリソース解放
@@ -56,11 +61,14 @@ class Model:
         # ビデオキャプチャから画像を取得
         ret, frame = self.cap.read()
 
-        self.log.debug(ret)
+        self.log.info(ret)
 
         # sizeを取得
         # (縦、横、色)
-        Height, Width = frame.shape[:2]
+        self.camera_height, self.camera_width = frame.shape[:2]
+
+        Height = self.camera_height
+        Width = self.camera_width
         self.log.info(f"x:{Width} y:{Height}")
 
         # 処理できる形に変換
@@ -163,6 +171,8 @@ class View:
 
         # フォントの設定
         self.log.debug("フォントの設定")
+        # メニュー用
+        self.font_menu = font.Font(family="Meiryo UI", size=30, weight="bold")
         # ラベルフレーム用
         self.font_frame = font.Font(family="Meiryo UI", size=15, weight="normal")
         # ラベル用
@@ -171,6 +181,7 @@ class View:
         self.font_buttom = font.Font(family="Meiryo UI", size=20, weight="bold")
 
         self.log.debug("フレームの設定")
+        # フレーム設定
         self.frame1 = tk.LabelFrame(self.master, text="元画像", font=self.font_frame)
         self.frame2 = tk.LabelFrame(self.master, text="計測距離", font=self.font_frame)
         self.frame3 = tk.Frame(self.master)
