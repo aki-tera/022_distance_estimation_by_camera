@@ -4,23 +4,22 @@
 
 
 ## DEMO
-### Your webcam can be measure by the distance between id0 and id1 within the enclosed mark.  
-<img src="https://user-images.githubusercontent.com/44888139/130731372-a2ff920d-f9e1-45e4-9a34-1c08de441ed3.png" height="300px">  
+### Your webcam can be measured by the distance between id0 and id1 within the enclosed mark.  
+<img src="https://user-images.githubusercontent.com/44888139/130731372-a2ff920d-f9e1-45e4-9a34-1c08de441ed3.png" height="500px">  
 
 ### You can get webcam infomation.  
-<img src="https://user-images.githubusercontent.com/44888139/130731390-9f1213d2-22d7-4adc-a836-7a3951085e01.png" height="200px">  
+<img src="https://user-images.githubusercontent.com/44888139/130731390-9f1213d2-22d7-4adc-a836-7a3951085e01.png" height="300px">  
 
-| Japanese | English | unit |
-----|----|----
-| カメラID | webcam ID | --- | 
-| フレームレート | Refresh rate |  FPS | 
-| マーク間の距離 | Distance between the four marks on the sheet |  mm | 
-| カメラの横幅 | webcam width |  dot | 
-| カメラの縦幅 | webcam height |  dot |
-  
+| Japanese | English | unit | settign.json |
+----|----|:---:|:---:
+| カメラID | webcam ID | --- |  configurable |
+| フレームレート | Refresh rate |  FPS | configurable |
+| マーク間の距離 | Distance between the four marks on the sheet |  mm | configurable |
+| カメラの横幅 | webcam width |  --- | --- |
+| カメラの縦幅 | webcam height |  --- | --- |
 
 ## Features
-Your webcam can be measure by the distance between id0 and id1 within the enclosed mark. 
+Your webcam can be measured by the distance between id0 and id1 within the enclosed mark. 
 
 ### specification
 - can select webcam by setting.json if your PC is connected to the cameras.
@@ -42,7 +41,7 @@ Python Library
 
 ## Usage
 1. Please print out Book1.pdf and cut out id0 and id1.
-1. Please change settign.json if you need to change.
+1. Please change "settign.json" if you need to change.
 1. Start this program.
 1. Press "開始(<- START>)".
 1. You can measure the length between id0 and id1.
