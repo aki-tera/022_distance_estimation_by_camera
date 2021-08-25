@@ -1,22 +1,83 @@
 # 022_distance_estimation_by_camera
+![](https://img.shields.io/badge/type-python3-brightgreen)  ![](https://img.shields.io/badge/windows%20build-passing-brightgreen) ![](https://img.shields.io/badge/license-MIT-brightgreen)   
+![](https://img.shields.io/badge/libraly-OpenCV-blue)  ![](https://img.shields.io/badge/libraly-NumPy-blue)  ![](https://img.shields.io/badge/libraly-Pillow-blue)
 
 
-参考資料
+## DEMO
+### Your webcam can be measure by the distance between id0 and id1 within the enclosed mark.  
+<img src="https://user-images.githubusercontent.com/44888139/130731372-a2ff920d-f9e1-45e4-9a34-1c08de441ed3.png" height="300px">  
 
-【Python】Tkinterを使った雛形（MVCモデル）
-https://qiita.com/michimichix521/items/8687962247cae41625f7
+### You can get webcam infomation.  
+<img src="https://user-images.githubusercontent.com/44888139/130731390-9f1213d2-22d7-4adc-a836-7a3951085e01.png" height="200px">  
 
-python: サンプルプログラムでMVCモデルの構成を掴む
-https://moimoiblog.com/programing/python-mvcmodel-study/
+| Japanese | English | unit |
+----|----|----
+| カメラID | webcam ID | --- | 
+| フレームレート | Refresh rate |  FPS | 
+| マーク間の距離 | Distance between the four marks on the sheet |  mm | 
+| カメラの横幅 | webcam width |  dot | 
+| カメラの縦幅 | webcam height |  dot |
+  
 
-Tkinter GUIアプリケーションの部品 (widgets) をウィンドウ上にどうやって配置するのだろう - 3つのジオメトリマネージャー
-https://cassiopeia.hatenadiary.org/entry/20070905/1189023758
+## Features
+Your webcam can be measure by the distance between id0 and id1 within the enclosed mark. 
 
-【Python】Tkinterのcanvasを使ってみる
-https://qiita.com/nnahito/items/2ab3ad0f3adacc3314e6
+### specification
+- can select webcam by setting.json if your PC is connected to the cameras.
+- can decide standard length by setting.json
 
-PythonでGUIに画像を表示する
-https://water2litter.net/rum/post/python_tkinter_canvas_create_image/
 
-【Python tkinter】LabelFrame（ラベルフレーム）ウィジェットの使い方
-https://office54.net/python/tkinter/python-tkinter-labelframe
+## Requirement 
+Python 3
+ - I ran this program with the following execution environment.
+   - Python 3.9
+   - Windows 10
+
+Python Library
+  - cv2(OpenCV)
+  - numpy
+  - PIL(Pillow)
+  - tkinter
+  - json
+
+## Usage
+1. Please print out Book1.pdf and cut out id0 and id1.
+1. Please change settign.json if you need to change.
+1. Start this program.
+1. Press "開始(<- START>)".
+1. You can measure the length between id0 and id1.
+1. Press "終了(<- STOP & END>)".
+
+
+## Note
+Nothing in particular
+
+## License
+This program is under MIT license.
+# 【日本語】
+
+
+## 機能
+カメラに写ったid0とid1の距離を測定します。
+- 仕様
+  - PCに複数のカメラがある場合、"setting.json"を使って指定します。
+  - 4つのマークの距離（基準距離）は、"setting.json"を使って指定します。
+
+## 必要なもの
+Python 3
+- このプログラムは、Python 3.9とWindows10で動作確認しています。
+
+## 使い方
+1. まずBook.pdfを印刷し、id0とid1を切り取ります。
+1. 必要ならsetting.jsonを変更します。
+1. プログラムを実行します。
+1. 開始ボタンを押します。
+1. カメラに写せば、id0とid1の距離を測れます。
+1. 終了ボタンを押せば、終了します。
+
+
+## 備考
+特にありません
+
+## ライセンス
+本プログラムは、MITライセンスです
