@@ -1,10 +1,17 @@
 {
     "CAM":{
-        "説明1":"カメラIDの設定、内臓カメラあり・・・内臓カメラ：0、USBカメラ：1　内臓カメラ無し・・・USBカメラ：0",
+        "説明":"カメラIDの設定・・・内臓カメラ：0、USBカメラ：1　内臓カメラ無し・・・USBカメラ：0",
+        "description":"Camera ID    Built-in camera:0, Webcam with USB:1    Webcam with USB:0 (if your pc don't have built in camera)",
         "ID": 0
     },
     "DISPLAY_RATE":{
         "説明":"画面の更新する回数・・・単位はfps  10fps以下が推奨",
+        "description":"Refresh rate   unit:fps   10fps or lower recommended",
         "RATE":10
+    },
+    "BASE_DISTANCE":{
+        "説明":"シートにある4つのマークの距離・・・単位はmm　pdfをA4で印刷すると135mmとなる",
+        "description":"Distance between the four marks on the sheet   unit:mm   it is 135mm if when printed at A4.",
+        "LENGTH":135.0
     }
 }

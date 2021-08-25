@@ -30,6 +30,7 @@ class Model:
 
         self.camera_id = self.camera_setting["CAM"]["ID"]
         self.camera_fps = self.camera_setting["DISPLAY_RATE"]["RATE"]
+        self.distance_mark = self.camera_setting["BASE_DISTANCE"]["LENGTH"]
 
         self.camera_width = 0
         self.camera_height = 0
@@ -146,7 +147,7 @@ class Model:
                         elif number == 1:
                             x_end, y_end = int(corner[0][0][0]), int(corner[0][0][1])
                     # id(0と1)の距離を表示
-                    self.distance_x, self.distance_y = (x_end - x_start) * 135.0 / 600.0, (y_end - y_start) * 135.0 / 600.0
+                    self.distance_x, self.distance_y = (x_end - x_start) * self.distance_mark / 600.0, (y_end - y_start) * self.distance_mark / 600.0
                     self.distance_xy = ((self.distance_x * self.distance_x + self.distance_y * self.distance_y) ** 0.5)
                     # id0とid1の間にラインを引く
                     self.img_trans = cv2.line(self.img_trans, (x_start, y_start), (x_end, y_end), (0, 0, 255), 1)
@@ -195,10 +196,11 @@ class View:
 
         # メニューの展開先の設定
         self.menu_file = tk.Menu(self.menu_bar, tearoff=False)
-        self.menu_file.add_command(label=f"使用しているカメラのID:{self.model.camera_id}", font=self.font_menu)
-        self.menu_file.add_command(label=f"FPS:{self.model.camera_fps}", font=self.font_menu)
-        self.menu_file.add_command(label=f"カメラの横幅:{self.model.camera_width}", font=self.font_menu)
-        self.menu_file.add_command(label=f"カメラの縦幅:{self.model.camera_height}", font=self.font_menu)
+        self.menu_file.add_command(label=f"カメラID:{self.model.camera_id}", font=self.font_menu)
+        self.menu_file.add_command(label=f"フレームレート:{self.model.camera_fps}[FPS]", font=self.font_menu)
+        self.menu_file.add_command(label=f"マーク間の距離:{self.model.distance_mark}[mm]", font=self.font_menu)
+        self.menu_file.add_command(label=f"カメラの横幅:{self.model.camera_width}[dot]", font=self.font_menu)
+        self.menu_file.add_command(label=f"カメラの縦幅:{self.model.camera_height}[dot]", font=self.font_menu)
         
         # メニューのルート設定
         self.menu_bar.add_cascade(label="カメラ情報", menu=self.menu_file)
@@ -271,13 +273,14 @@ class View:
         # メニューの更新
 
         # 現状のメニューを一旦削除
-        self.menu_file.delete(0, 3)
+        self.menu_file.delete(0, 4)
 
         # メニューを再表示
         self.menu_file.add_command(label=f"カメラID:{self.model.camera_id}", font=self.font_menu)
-        self.menu_file.add_command(label=f"FPS:{self.model.camera_fps}", font=self.font_menu)
-        self.menu_file.add_command(label=f"カメラの横幅:{self.model.camera_width}", font=self.font_menu)
-        self.menu_file.add_command(label=f"カメラの縦幅:{self.model.camera_height}", font=self.font_menu)
+        self.menu_file.add_command(label=f"フレームレート:{self.model.camera_fps}[FPS]", font=self.font_menu)
+        self.menu_file.add_command(label=f"マーク間の距離:{self.model.distance_mark}[mm]", font=self.font_menu)
+        self.menu_file.add_command(label=f"カメラの横幅:{self.model.camera_width}[dot]", font=self.font_menu)
+        self.menu_file.add_command(label=f"カメラの縦幅:{self.model.camera_height}[dot]", font=self.font_menu)
 
     def display_distance_value(self):
         self.log.debug("display_distance_value")
