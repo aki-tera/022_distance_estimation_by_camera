@@ -15,9 +15,9 @@
 | カメラID | webcam ID | --- |  configurable |
 | フレームレート | Refresh rate |  FPS | configurable |
 | マーク間の距離 | Distance between the four marks on the sheet |  mm | configurable |
-| カメラの横幅 | CAP_PROP_FRAME_WIDTH |  --- | --- |
-| カメラの縦幅 | CAP_PROP_FRAME_HEIGHT |  --- | --- |
-| カメラのFPS | CAP_PROP_FPS |  --- | --- |
+| カメラの横幅 | CAP_PROP_FRAME_WIDTH |  dot | --- |
+| カメラの縦幅 | CAP_PROP_FRAME_HEIGHT |  dot | --- |
+| カメラのFPS | CAP_PROP_FPS |  fps | --- |
 | カメラの明るさ | CAP_PROP_BRIGHTNESS |  --- | --- |
 | カメラのコントラスト | CAP_PROP_CONTRAST |  --- | --- |
 | カメラの彩度 | CAP_PROP_SATURATION |  --- | --- |
@@ -57,10 +57,10 @@ Python Library
 
 
 ## Note
-please change the following inprograms, if your PC isn't windows PC.  
+please change the following in programs, if your PC isn't windows PC.  
 - windows
   - self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"], cv2.CAP_DSHOW)
-- Linux, max
+- Linux, Mac
   - self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"])
 
 ## License
@@ -91,7 +91,7 @@ Python 3
 windows環境以外の人は、以下の変更をして下さい。  
 - windows
   - self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"], cv2.CAP_DSHOW)
-- Linux, max
+- Linux, Mac
   - self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"])
 
 

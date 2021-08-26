@@ -8,26 +8,10 @@ import numpy as np
 import json
 
 
-# PEP8に準拠するとimportが先頭に行くので苦肉の策
-while True:
-    import sys
-    sys.path.append("../000_mymodule/")
-    import logger
-    from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
-    DEBUG_LEVEL = CRITICAL
-    break
-
-
 class Model:
-    log = logger.Logger("Model", level=DEBUG_LEVEL)
-
     def __init__(self):
-        self.log.debug("__init__")
-
         # 本ソフトの設定ファイル読み込み
         self.camera_setting = json.load(open("setting.json", "r", encoding="utf-8"))
-        self.log.debug(str(self.camera_setting))
-
         self.camera_id = self.camera_setting["CAM"]["ID"]
         self.camera_fps = self.camera_setting["DISPLAY_RATE"]["RATE"]
         self.distance_mark = self.camera_setting["BASE_DISTANCE"]["LENGTH"]
@@ -45,8 +29,6 @@ class Model:
 
     def camera_open(self):
         # カメラ起動
-        self.log.debug("camera_open")
-
         self.aruco = cv2.aruco
         self.dictionary = self.aruco.getPredefinedDictionary(self.aruco.DICT_4X4_50)
 
@@ -58,27 +40,20 @@ class Model:
         for i, label in enumerate(self.camera_info_parameter):
             if label:
                 self.camera_info_results[i] = self.cap.get(i)
-                self.log.info(label + ':' + str(self.camera_info_results[i]))
 
     def caremra_release(self):
         # カメラリソース解放
-        self.log.debug("camera_release")
         self.cap.release()
 
     def create_camera_infomations(self):
         # cv2の処理をすべて実施
-        self.log.debug("create_camera_infomations")
 
         # ビデオキャプチャから画像を取得
         ret, frame = self.cap.read()
 
-        self.log.info(ret)
-
         # sizeを取得
         # (縦、横、色)
         Height, Width = frame.shape[:2]
-
-        self.log.info(f"x:{Width} y:{Height}")
 
         # 処理できる形に変換
         img1 = cv2.resize(frame, (int(Width), int(Height)))
@@ -94,19 +69,13 @@ class Model:
         # マーカー付きの画像を小さくする
         self.img2 = cv2.resize(self.img2, (int(400), int(400 * Height / Width)))
 
-        self.log.debug(f"x:400 y:{int(400* Height / Width)}")
-
-        m = np.empty((4, 2))
-
-        self.log.info(ids)
-
         # ラインを引く準備
+        m = np.empty((4, 2))
         x_start, y_start = 0, 0
         x_end, y_end = 0, 0
 
         if ids is None:
             # マーカーが無い場合
-            self.log.debug("None")
             self.img_trans = cv2.resize(frame, (600, 600))
             self.distance_x = 0.0
             self.distance_y = 0.0
@@ -114,11 +83,9 @@ class Model:
 
         elif np.count_nonzero((2 <= ids) & (ids <= 6)) == 4:
             # マーカーの数が適正な場合：4個（但し、id0とid1は除く）
-            self.log.debug("Number is 4")
             for i, c in zip(ids, corners):
                 # マーカーの赤丸位置を基準としている
                 if 2 <= i <= 6:
-                    self.log.debug(c)
                     m[i - 2] = c[0][0]
 
             # 変形後の画像サイズ
@@ -149,37 +116,21 @@ class Model:
                     self.distance_xy = ((self.distance_x * self.distance_x + self.distance_y * self.distance_y) ** 0.5)
                     # id0とid1の間にラインを引く
                     self.img_trans = cv2.line(self.img_trans, (x_start, y_start), (x_end, y_end), (0, 0, 255), 1)
-
         else:
             # マーカーが0～3個場合（但し、id0とid1は除く）
-            self.log.debug("others")
             self.img_trans = cv2.resize(frame, (600, 600))
             self.distance_x = 0.0
             self.distance_y = 0.0
             self.distance_xy = 0.0
 
-        # 計算結果の確認用
-        self.log.debug(x_start)
-        self.log.debug(y_start)
-        self.log.debug(x_end)
-        self.log.debug(y_end)
-        self.log.info(self.distance_x)
-        self.log.info(self.distance_y)
-        self.log.info(self.distance_xy)
-
 
 class View:
-    log = logger.Logger("View", level=DEBUG_LEVEL)
-
     def __init__(self, master, model):
-        self.log.debug("__init__")
-
         # インスタンス化
         self.master = master
         self.model = model
 
         # フォントの設定
-        self.log.debug("フォントの設定")
         # メニュー用
         self.font_menu = font.Font(family="Meiryo UI", size=15, weight="bold")
         # ラベルフレーム用
@@ -205,22 +156,17 @@ class View:
             if label:
                 self.menu_file.add_command(label=f"{label}:{self.model.camera_info_results[i]}", font=self.font_menu)
                 self.menu_list_numbers += 1
-        self.log.info(self.menu_list_numbers)
         
         # メニューのルート設定
         self.menu_bar.add_cascade(label="カメラ情報", menu=self.menu_file)
-
         # メニューの表示
         self.master.config(menu=self.menu_bar)
-
-        self.log.debug("フレームの設定")
         # フレーム設定
         self.frame1 = tk.LabelFrame(self.master, text="元画像", font=self.font_frame)
         self.frame2 = tk.LabelFrame(self.master, text="計測距離", font=self.font_frame)
         self.frame3 = tk.Frame(self.master)
         self.frame4 = tk.LabelFrame(self.master, text="変換画像", font=self.font_frame)
-
-        self.log.debug("グリッドの設定")
+        
         # c=左, r=上, s=全方向に伸ばす, p=10の隙間
         self.frame1.grid(column=0, row=0, sticky=tk.E + tk.W + tk.S + tk.N, padx=10, pady=10)
         # c=左, r=中, s=全方向に伸ばす, p=10の隙間
@@ -229,8 +175,7 @@ class View:
         self.frame3.grid(column=0, row=2, padx=10, pady=10)
         # c=右, r=上, rp=3個連結, p=10の隙間
         self.frame4.grid(column=1, row=0, rowspan=3, padx=10, pady=10)
-
-        self.log.debug("各フレームの内部詳細")
+        
         # フレーム1：オリジナル画像
         self.canvas1 = tk.Canvas(self.frame1, width=400, height=300)
         # フレーム２：距離関連
@@ -248,8 +193,7 @@ class View:
         self.button32 = tk.Button(self.frame3, text="終了", font=self.font_buttom)
         # フレーム４：変換画像
         self.canvas4 = tk.Canvas(self.frame4, width=600, height=600)
-
-        self.log.debug("各フレームの内部グリッド")
+        
         self.canvas1.grid(pady=20)
         # c=左1, r=上
         self.label211.grid(column=0, row=0)
@@ -274,9 +218,7 @@ class View:
         self.canvas4.grid()
 
     def update_menu_infomation(self):
-        self.log.debug("update_menu_infomation")
         # メニューの更新
-
         # 現状のメニューを一旦削除
         self.menu_file.delete(0, self.menu_list_numbers)
 
@@ -289,10 +231,8 @@ class View:
         for i, label in enumerate(self.model.camera_info_parameter):
             if label:
                 self.menu_file.add_command(label=f"{label}:{self.model.camera_info_results[i]}", font=self.font_menu)
-                self.log.info(label)
 
     def display_distance_value(self):
-        self.log.debug("display_distance_value")
         # 更新された距離を表示する
 
         # X方向
@@ -308,8 +248,6 @@ class View:
         self.label232.grid(column=4, row=0, rowspan=2)
 
     def display_image_original(self):
-        self.log.debug("display_image_original")
-
         # マーク付きのオリジナル画像を表示する
         self.img1 = cv2.cvtColor(self.model.img2, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
@@ -318,8 +256,6 @@ class View:
         self.canvas1.create_image(0, 0, anchor='nw', image=self.im1)
 
     def display_image_translation(self):
-        self.log.debug("display_image_translation")
-
         # マーク内の変換画像を表示する
         self.img4 = cv2.cvtColor(self.model.img_trans, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
@@ -329,11 +265,7 @@ class View:
 
 
 class Controller():
-    log = logger.Logger("Controller", level=DEBUG_LEVEL)
-
     def __init__(self, master, model, view):
-        self.log.debug("__init__")
-
         # インスタンス化
         self.master = master
         self.model = model
@@ -343,9 +275,6 @@ class Controller():
         self.is_camera_open = False
 
     def request_camera_open(self):
-        self.log.debug("request_camera_open")
-        self.log.debug(f"camera_open:{str(self.is_camera_open)}")
-
         # カメラの起動
         self.model.camera_open()
         # カメラ起動のON
@@ -355,7 +284,6 @@ class Controller():
         self.view.update_menu_infomation()
 
     def request_camera_results(self):
-        self.log.debug("request_camera_view")
         # 各種の表示をここで一括して行う
 
         # カメラ処理（画像取得、距離取得）の実施
@@ -375,8 +303,6 @@ class Controller():
         self.master.after(int(1000 / self.model.camera_fps), self.request_camera_results)
 
     def press_start_button(self):
-        self.log.debug("press_start_button")
-
         # 初回のみカメラを起動
         # 初回のみ結果取得を実行して、あとはafterメソッドで対応する
         if self.is_camera_open is False:
@@ -385,7 +311,6 @@ class Controller():
             self.request_camera_results()
 
     def press_close_button(self):
-        self.log.debug("press_close_button")
         # 終了処理
 
         # ウイジェットの終了
@@ -394,37 +319,27 @@ class Controller():
         if self.is_camera_open is True:
             self.model.caremra_release()
 
-        self.log.debug("終了")
-
 
 class Application(tk.Frame):
-    log = logger.Logger("Application", level=DEBUG_LEVEL)
-
     def __init__(self, master):
-        # tkinterの定型文
-
-        self.log.debug("__init__")
         # tkinterの定型文
         super().__init__(master)
         self.grid()
-
-        self.log.debug("Modelのインスタンス化")
+        
         # インスタンス化
         self.model = Model()
-
-        self.log.debug("ウインドウ作成")
+        
         master.geometry("1060x660")
         master.title("カメラによる計測アプリ")
+
         # ウインドウサイズの変更不可
         master.resizable(width=False, height=False)
 
         # インスタンス化
-        self.log.debug("Viewのインスタンス化")
         self.view = View(master, self.model)
-        self.log.debug("Controllerのインスタンス化")
         self.controller = Controller(master, self.model, self.view)
 
-        self.log.debug("ボタンの登録")
+        # ボタンのコマンド設定
         self.view.button31["command"] = self.controller.press_start_button
         self.view.button32["command"] = self.controller.press_close_button
 
