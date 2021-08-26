@@ -32,8 +32,12 @@ class Model:
         self.camera_fps = self.camera_setting["DISPLAY_RATE"]["RATE"]
         self.distance_mark = self.camera_setting["BASE_DISTANCE"]["LENGTH"]
 
-        self.camera_width = 0
-        self.camera_height = 0
+        # カメラ設定用
+        self.camera_info_parameter = [
+            "", "", "", "カメラの横幅", "カメラの縦幅", "カメラのFPS", "",
+            "", "", "", "カメラの明るさ", "カメラのコントラスト", "カメラの彩度",
+            "カメラの色相", "カメラのゲイン", "カメラの露出"]
+        self.camera_info_results = [999] * len(self.camera_info_parameter)
 
         self.distance_x = 999.0
         self.distance_y = 999.0
@@ -49,16 +53,12 @@ class Model:
         # CAP_DSHOWを設定すると、終了時のterminating async callbackのエラーは出なくなる
         # ただし場合によっては、フレームレートが劇遅になる可能性あり
         self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"], cv2.CAP_DSHOW)
-        # カメラ画素より小さい画像を選択するときに有効
-        # 持っているカメラが640*480なので不要とする
-        # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.camera_setting["CAM"]["WIDTH"])
 
         # カメラのステータス確認
-        _, frame = self.cap.read()
-
-        # sizeを取得
-        # (縦、横、色)
-        self.camera_height, self.camera_width = frame.shape[:2]
+        for i, label in enumerate(self.camera_info_parameter):
+            if label:
+                self.camera_info_results[i] = self.cap.get(i)
+                self.log.info(label + ':' + str(self.camera_info_results[i]))
 
     def caremra_release(self):
         # カメラリソース解放
@@ -76,10 +76,8 @@ class Model:
 
         # sizeを取得
         # (縦、横、色)
-        self.camera_height, self.camera_width = frame.shape[:2]
+        Height, Width = frame.shape[:2]
 
-        Height = self.camera_height
-        Width = self.camera_width
         self.log.info(f"x:{Width} y:{Height}")
 
         # 処理できる形に変換
@@ -183,7 +181,7 @@ class View:
         # フォントの設定
         self.log.debug("フォントの設定")
         # メニュー用
-        self.font_menu = font.Font(family="Meiryo UI", size=20, weight="bold")
+        self.font_menu = font.Font(family="Meiryo UI", size=15, weight="bold")
         # ラベルフレーム用
         self.font_frame = font.Font(family="Meiryo UI", size=15, weight="normal")
         # ラベル用
@@ -199,8 +197,15 @@ class View:
         self.menu_file.add_command(label=f"カメラID:{self.model.camera_id}", font=self.font_menu)
         self.menu_file.add_command(label=f"フレームレート:{self.model.camera_fps}[FPS]", font=self.font_menu)
         self.menu_file.add_command(label=f"マーク間の距離:{self.model.distance_mark}[mm]", font=self.font_menu)
-        self.menu_file.add_command(label=f"カメラの横幅:{self.model.camera_width}[dot]", font=self.font_menu)
-        self.menu_file.add_command(label=f"カメラの縦幅:{self.model.camera_height}[dot]", font=self.font_menu)
+        self.menu_file.add_separator()
+
+        # カメラ情報分
+        self.menu_list_numbers = 3
+        for i, label in enumerate(self.model.camera_info_parameter):
+            if label:
+                self.menu_file.add_command(label=f"{label}:{self.model.camera_info_results[i]}", font=self.font_menu)
+                self.menu_list_numbers += 1
+        self.log.info(self.menu_list_numbers)
         
         # メニューのルート設定
         self.menu_bar.add_cascade(label="カメラ情報", menu=self.menu_file)
@@ -273,14 +278,18 @@ class View:
         # メニューの更新
 
         # 現状のメニューを一旦削除
-        self.menu_file.delete(0, 4)
+        self.menu_file.delete(0, self.menu_list_numbers)
 
         # メニューを再表示
         self.menu_file.add_command(label=f"カメラID:{self.model.camera_id}", font=self.font_menu)
         self.menu_file.add_command(label=f"フレームレート:{self.model.camera_fps}[FPS]", font=self.font_menu)
         self.menu_file.add_command(label=f"マーク間の距離:{self.model.distance_mark}[mm]", font=self.font_menu)
-        self.menu_file.add_command(label=f"カメラの横幅:{self.model.camera_width}[dot]", font=self.font_menu)
-        self.menu_file.add_command(label=f"カメラの縦幅:{self.model.camera_height}[dot]", font=self.font_menu)
+        self.menu_file.add_separator()
+        
+        for i, label in enumerate(self.model.camera_info_parameter):
+            if label:
+                self.menu_file.add_command(label=f"{label}:{self.model.camera_info_results[i]}", font=self.font_menu)
+                self.log.info(label)
 
     def display_distance_value(self):
         self.log.debug("display_distance_value")
