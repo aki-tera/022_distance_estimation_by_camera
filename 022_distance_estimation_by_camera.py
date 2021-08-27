@@ -8,7 +8,18 @@ import numpy as np
 import json
 
 
+# PEP8に準拠するとimportが先頭に行くので苦肉の策
+while True:
+    import sys
+    sys.path.append("../000_mymodule/")
+    import logger
+    from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
+    DEBUG_LEVEL = DEBUG
+    break
+
 class Model:
+    log = logger.Logger("Model", level=DEBUG_LEVEL)
+
     def __init__(self):
         # 本ソフトの設定ファイル読み込み
         self.camera_setting = json.load(open("setting.json", "r", encoding="utf-8"))
@@ -18,7 +29,7 @@ class Model:
 
         # カメラ設定用
         self.camera_info_parameter = [
-            "", "", "", "カメラの横幅", "カメラの縦幅", "カメラのFPS", "",
+            "", "", "", "カメラの横幅", "カメラの縦幅", "カメラのFPS", "形式",
             "", "", "", "カメラの明るさ", "カメラのコントラスト", "カメラの彩度",
             "カメラの色相", "カメラのゲイン", "カメラの露出"]
         self.camera_info_results = [999] * len(self.camera_info_parameter)
@@ -34,7 +45,10 @@ class Model:
 
         # CAP_DSHOWを設定すると、終了時のterminating async callbackのエラーは出なくなる
         # ただし場合によっては、フレームレートが劇遅になる可能性あり
-        self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"], cv2.CAP_DSHOW)
+        self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"])
+
+        # self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 
         # カメラのステータス確認
         for i, label in enumerate(self.camera_info_parameter):
@@ -46,6 +60,7 @@ class Model:
         self.cap.release()
 
     def create_camera_infomations(self):
+        self.log.debug("create_camera_infomations")
         # cv2の処理をすべて実施
 
         # ビデオキャプチャから画像を取得
@@ -54,6 +69,7 @@ class Model:
         # sizeを取得
         # (縦、横、色)
         Height, Width = frame.shape[:2]
+        self.log.debug(f"Width:{Width}  Height:{Height}")
 
         # 処理できる形に変換
         img1 = cv2.resize(frame, (int(Width), int(Height)))
