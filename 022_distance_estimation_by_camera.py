@@ -8,19 +8,24 @@ import numpy as np
 import json
 
 
-# PEP8に準拠するとimportが先頭に行くので苦肉の策
-while True:
-    import sys
-    sys.path.append("../000_mymodule/")
-    import logger
-    from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
-    DEBUG_LEVEL = DEBUG
-    break
-
 class Model:
-    log = logger.Logger("Model", level=DEBUG_LEVEL)
+    """Webcam related
+
+    1. load webcams's config which is setting.json.
+    2. set up config in the webcam.
+    3. get webcam image.
+    4. compute and measure.
+    5. release webcam resource
+
+    """
 
     def __init__(self):
+        """load webcams's config which is setting.json.
+
+        1. load setting.json.
+        2. create instance variables.
+
+        """
         # 本ソフトの設定ファイル読み込み
         self.camera_setting = json.load(open("setting.json", "r", encoding="utf-8"))
         self.camera_id = self.camera_setting["CAM"]["ID"]
@@ -39,12 +44,20 @@ class Model:
         self.distance_xy = 999.0
 
     def camera_open(self):
+        """set up config in the webcam.
+
+        1. create dictionary about AR marker DICT_4X4_50.
+        2. open webcam.
+        3. get webcam information.
+
+        """
         # カメラ起動
         self.aruco = cv2.aruco
         self.dictionary = self.aruco.getPredefinedDictionary(self.aruco.DICT_4X4_50)
 
         # CAP_DSHOWを設定すると、終了時のterminating async callbackのエラーは出なくなる
         # ただし場合によっては、フレームレートが劇遅になる可能性あり
+        # self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"], cv2.CAP_DSHOW)
         self.cap = cv2.VideoCapture(self.camera_setting["CAM"]["ID"])
 
         # self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
@@ -56,11 +69,20 @@ class Model:
                 self.camera_info_results[i] = self.cap.get(i)
 
     def caremra_release(self):
+        """release webcam resource.
+        """
         # カメラリソース解放
         self.cap.release()
 
-    def create_camera_infomations(self):
-        self.log.debug("create_camera_infomations")
+    def compute_camera_infomations(self):
+        """compute and measure.
+
+        1. get image from webcam.
+        2. detect AR markers and display id of AR markers.
+        3. cut the image using four AR markers.
+        4. mesure from id0 to id1
+
+        """
         # cv2の処理をすべて実施
 
         # ビデオキャプチャから画像を取得
@@ -69,7 +91,6 @@ class Model:
         # sizeを取得
         # (縦、横、色)
         Height, Width = frame.shape[:2]
-        self.log.debug(f"Width:{Width}  Height:{Height}")
 
         # 処理できる形に変換
         img1 = cv2.resize(frame, (int(Width), int(Height)))
@@ -141,7 +162,21 @@ class Model:
 
 
 class View:
+    """tkinter related
+    """
+
     def __init__(self, master, model):
+        """create widget objects
+
+        1. setiing of font
+        2. create menu objects
+        3. create frames objects and others
+        4. use grid()
+
+        Args:
+            master (class): main window
+            model (class): Webcam related
+        """
         # インスタンス化
         self.master = master
         self.model = model
@@ -234,6 +269,12 @@ class View:
         self.canvas4.grid()
 
     def update_menu_infomation(self):
+        """update menu
+
+        1. delete menu
+        2. recreate menu
+
+        """
         # メニューの更新
         # 現状のメニューを一旦削除
         self.menu_file.delete(0, self.menu_list_numbers)
@@ -249,6 +290,12 @@ class View:
                 self.menu_file.add_command(label=f"{label}:{self.model.camera_info_results[i]}", font=self.font_menu)
 
     def display_distance_value(self):
+        """display values
+
+        1. get values from Model class
+        2. redisplay values
+
+        """
         # 更新された距離を表示する
 
         # X方向
@@ -264,6 +311,12 @@ class View:
         self.label232.grid(column=4, row=0, rowspan=2)
 
     def display_image_original(self):
+        """display image of original
+
+        1. color conversion(BGR to RGB)
+        2. redisplay image
+
+        """
         # マーク付きのオリジナル画像を表示する
         self.img1 = cv2.cvtColor(self.model.img2, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
@@ -272,6 +325,13 @@ class View:
         self.canvas1.create_image(0, 0, anchor='nw', image=self.im1)
 
     def display_image_translation(self):
+        """display image of translation
+
+        1. color conversion(BGR to RGB)
+        2. redisplay image
+
+        """
+
         # マーク内の変換画像を表示する
         self.img4 = cv2.cvtColor(self.model.img_trans, cv2.COLOR_BGR2RGB)
         # 複数のインスタンスがある場合、インスタンをmasterで指示しないとエラーが発生する場合がある
@@ -281,7 +341,16 @@ class View:
 
 
 class Controller():
+    """controller related
+    """
     def __init__(self, master, model, view):
+        """[summary]
+
+        Args:
+            master (class): main window
+            model (class): Webcam related
+            view (class): tkinter related
+        """
         # インスタンス化
         self.master = master
         self.model = model
@@ -291,6 +360,13 @@ class Controller():
         self.is_camera_open = False
 
     def request_camera_open(self):
+        """start webcam
+
+        1. open webcam
+        2. start to get image
+        3. redisplay webcam information
+
+        """
         # カメラの起動
         self.model.camera_open()
         # カメラ起動のON
@@ -300,11 +376,18 @@ class Controller():
         self.view.update_menu_infomation()
 
     def request_camera_results(self):
+        """control to display images and others
+
+        1. compute webcam image
+        2. display values and images
+        3. execute after method
+
+        """
         # 各種の表示をここで一括して行う
 
         # カメラ処理（画像取得、距離取得）の実施
         # Moldeクラス
-        self.model.create_camera_infomations()
+        self.model.compute_camera_infomations()
 
         # 数値出力
         # Viewクラス
@@ -319,6 +402,11 @@ class Controller():
         self.master.after(int(1000 / self.model.camera_fps), self.request_camera_results)
 
     def press_start_button(self):
+        """when start button is pressed
+
+        1. don't execute if it's the second time and later.
+
+        """
         # 初回のみカメラを起動
         # 初回のみ結果取得を実行して、あとはafterメソッドで対応する
         if self.is_camera_open is False:
@@ -327,6 +415,12 @@ class Controller():
             self.request_camera_results()
 
     def press_close_button(self):
+        """Terminate all
+
+        1. destroy widgets
+        2. relase webcam resource
+
+        """
         # 終了処理
 
         # ウイジェットの終了
@@ -337,6 +431,17 @@ class Controller():
 
 
 class Application(tk.Frame):
+    """main routine
+
+    1. create tkinter
+    2. set window
+    3. create class object
+    4. set buttom command
+
+    Args:
+        tk (class): root of tkinter
+
+    """
     def __init__(self, master):
         # tkinterの定型文
         super().__init__(master)
@@ -345,7 +450,7 @@ class Application(tk.Frame):
         # インスタンス化
         self.model = Model()
         
-        master.geometry("1060x660")
+        master.geometry()
         master.title("カメラによる計測アプリ")
 
         # ウインドウサイズの変更不可
