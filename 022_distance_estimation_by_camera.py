@@ -43,7 +43,7 @@ class Model:
         self.distance_y = 999.0
         self.distance_xy = 999.0
 
-    def camera_open(self):
+    def open_camera(self):
         """set up config in the webcam.
 
         1. create dictionary about AR marker DICT_4X4_50.
@@ -68,8 +68,9 @@ class Model:
             if label:
                 self.camera_info_results[i] = self.cap.get(i)
 
-    def caremra_release(self):
+    def release_caremra(self):
         """release webcam resource.
+
         """
         # カメラリソース解放
         self.cap.release()
@@ -163,6 +164,7 @@ class Model:
 
 class View:
     """tkinter related
+
     """
 
     def __init__(self, master, model):
@@ -342,9 +344,10 @@ class View:
 
 class Controller():
     """controller related
+
     """
     def __init__(self, master, model, view):
-        """[summary]
+        """create instances
 
         Args:
             master (class): main window
@@ -357,7 +360,7 @@ class Controller():
         self.view = view
 
         # カメラの起動有無のフラグ設定
-        self.is_camera_open = False
+        self.is_open_camera = False
 
     def request_camera_open(self):
         """start webcam
@@ -368,9 +371,9 @@ class Controller():
 
         """
         # カメラの起動
-        self.model.camera_open()
+        self.model.open_camera()
         # カメラ起動のON
-        self.is_camera_open = True
+        self.is_open_camera = True
 
         # メニューの更新
         self.view.update_menu_infomation()
@@ -409,7 +412,7 @@ class Controller():
         """
         # 初回のみカメラを起動
         # 初回のみ結果取得を実行して、あとはafterメソッドで対応する
-        if self.is_camera_open is False:
+        if self.is_open_camera is False:
             self.request_camera_open()
             # カメラの結果を取得
             self.request_camera_results()
@@ -426,8 +429,8 @@ class Controller():
         # ウイジェットの終了
         self.master.destroy()
         # カメラリソース解放
-        if self.is_camera_open is True:
-            self.model.caremra_release()
+        if self.is_open_camera is True:
+            self.model.release_caremra()
 
 
 class Application(tk.Frame):
@@ -443,6 +446,11 @@ class Application(tk.Frame):
 
     """
     def __init__(self, master):
+        """start instance
+
+        Args:
+            master  (class): main
+        """
         # tkinterの定型文
         super().__init__(master)
         self.grid()
