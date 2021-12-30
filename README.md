@@ -6,11 +6,11 @@
 
 ## DEMO
 
-### Your webcam can be measured by the distance between id0 and id1 within the enclosed mark.  
+### Your webcam can be measured by the distance between id0 and id1 within the enclosed mark  
 
 <img src="https://user-images.githubusercontent.com/44888139/130731372-a2ff920d-f9e1-45e4-9a34-1c08de441ed3.png" height="500px">  
 
-### You can get webcam infomation.  
+### You can get webcam infomation  
 
 <img src="https://user-images.githubusercontent.com/44888139/130957708-4f060f34-4286-49f2-a812-220ae4e36bb9.png" height="300px">  
 
@@ -31,7 +31,7 @@
 
 ## Features
 
-Your webcam can be measured by the distance between id0 and id1 within the enclosed mark. 
+Your webcam can be measured by the distance between id0 and id1 within the enclosed mark.  
 
 ### specification
 
